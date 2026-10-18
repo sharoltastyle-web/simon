@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#171717" />
+    <title>סיימון</title>
+  </head>
+  <body>
+    <section id="screen-home" class="screen screen--home" aria-labelledby="home-title">
+      <header class="app-header">
+        <h1 id="home-title" class="app-header__title">סיימון</h1>
+        <a class="app-header__link" href="#/about">אודות</a>
+      </header>
+      <main class="home">
+        <div class="status-bar">
+          <span>שלב: <span id="stage-value">0</span> מתוך 10</span>
+          <span>ניקוד: <span id="score-value">0</span></span>
+        </div>
+        <div class="board-wrap">
+          <div class="board">
+            <button type="button" class="pad pad--blue" data-color="blue">כחול</button>
+            <button type="button" class="pad pad--red" data-color="red">אדום</button>
+            <button type="button" class="pad pad--yellow" data-color="yellow">צהוב</button>
+            <button type="button" class="pad pad--green" data-color="green">ירוק</button>
+          </div>
+        </div>
+        <p id="message" class="message" aria-live="polite"></p>
+        <button type="button" id="start-button" class="start-button">התחל</button>
+      </main>
+    </section>
+
+    <section id="screen-about" class="screen screen--about" aria-labelledby="about-title" hidden>
+      <header class="app-header">
+        <h1 id="about-title" class="app-header__title">אודות</h1>
+        <a class="app-header__link" href="#/">חזרה למשחק</a>
+      </header>
+      <main class="about">
+        <p class="about__description">משחק זיכרון עם אורות וצלילים</p>
+        <h2 class="about__subtitle">איך משחקים?</h2>
+        <ul class="instructions">
+          <li>לחצו על התחל.</li>
+          <li>צפו ברצף והקשיבו לצלילים.</li>
+          <li>חזרו על הרצף באותו הסדר.</li>
+          <li>בכל שלב נוסף צבע לרצף.</li>
+          <li>לכל לחיצה עומדות לרשותכם 5 שניות.</li>
+          <li>טעות או תום הזמן מסיימים את המשחק.</li>
+          <li>השלימו 10 שלבים כדי לנצח.</li>
+        </ul>
+        <section class="score-card" aria-labelledby="best-score-title">
+          <h3 id="best-score-title" class="score-card__title">השיא האישי</h3>
+          <p id="best-score" class="score-card__value">טרם שוחק משחק</p>
+        </section>
+        <section class="score-card" aria-labelledby="last-score-title">
+          <h3 id="last-score-title" class="score-card__title">תוצאת המשחק האחרון</h3>
+          <p id="last-score" class="score-card__value">טרם שוחק משחק</p>
+        </section>
+      </main>
+    </section>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,315 @@
+:root {
+  /* Approved tokens from DESIGN.md */
+  --color-bg: #171717;
+  --color-surface: #262626;
+  --color-text: #f5f5f5;
+  --color-border: #4a4a4a;
+  --color-blue: #009fe3;
+  --color-red: #d9232b;
+  --color-yellow: #e4d600;
+  --color-green: #23ad4a;
+
+  --radius: 16px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+
+  --font-family: 'Heebo', Arial, sans-serif;
+  --font-h1: 700 32px/1.2 var(--font-family);
+  --font-h2: 700 24px/1.3 var(--font-family);
+  --font-body: 400 16px/1.5 var(--font-family);
+  --font-label: 500 14px/1.4 var(--font-family);
+  --font-button: 700 18px/1.2 var(--font-family);
+
+  --touch-min: 48px;
+
+  /* Dark tone used for game-pad frames and the dark label on yellow (no separate token in DESIGN) */
+  --pad-frame: #0d0d0d;
+  --pad-label-dark: #171717;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: var(--font-body);
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+p,
+ul {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ---------- Screens ---------- */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ---------- Header ---------- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  padding-top: calc(var(--space-1) + env(safe-area-inset-top));
+  padding-inline-start: calc(var(--space-2) + env(safe-area-inset-right));
+  padding-inline-end: calc(var(--space-1) + env(safe-area-inset-left));
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow);
+}
+
+.app-header__title {
+  font: var(--font-h1);
+}
+
+.app-header__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding-inline: var(--space-1);
+  color: var(--color-text);
+  font: var(--font-body);
+  text-decoration: none;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-header__link:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+/* ---------- Home ---------- */
+
+.home {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  padding-inline: calc(var(--space-2) + env(safe-area-inset-right)) calc(var(--space-2) + env(safe-area-inset-left));
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font: var(--font-body);
+  font-size: 18px;
+}
+
+.board-wrap {
+  display: flex;
+  margin-top: var(--space-1);
+  align-items: center;
+  justify-content: center;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+  /* Keep the square board small enough that the Start button stays visible on short phones */
+  width: min(100%, calc(100dvh - 300px));
+  min-width: 200px;
+  padding: var(--space-1);
+  background: var(--pad-frame);
+  border: 1px solid #2e2e2e;
+  border-radius: calc(var(--radius) + var(--space-1));
+  box-shadow: var(--shadow);
+}
+
+.pad {
+  --pad-color: var(--color-blue);
+  --pad-label: var(--color-text);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-height: var(--touch-min);
+  padding: 0;
+  border: 3px solid var(--pad-frame);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0.18) 100%),
+    var(--pad-color);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+  color: var(--pad-label);
+  font-family: var(--font-family);
+  font-weight: 700;
+  font-size: clamp(26px, 9vw, 40px);
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 80ms ease, box-shadow 80ms ease;
+}
+
+.pad--blue {
+  --pad-color: var(--color-blue);
+}
+
+.pad--red {
+  --pad-color: var(--color-red);
+}
+
+.pad--yellow {
+  --pad-color: var(--color-yellow);
+  --pad-label: var(--pad-label-dark);
+}
+
+.pad--green {
+  --pad-color: var(--color-green);
+}
+
+.pad:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+/* Active (lit) state: brightness + soft glow. Used from Milestone 2. */
+.pad.is-active {
+  filter: brightness(1.25);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    0 0 18px 4px var(--pad-color);
+}
+
+.message {
+  min-height: calc(2 * 1.5em);
+  text-align: center;
+  font: var(--font-body);
+  color: var(--color-text);
+}
+
+.start-button {
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-1) var(--space-2);
+  border: 2px solid var(--pad-frame);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #fafafa 0%, #d9d9d9 45%, #a8a8a8 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    var(--shadow);
+  color: var(--pad-label-dark);
+  font: var(--font-button);
+  font-size: 22px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.start-button:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 3px;
+}
+
+.start-button:disabled {
+  background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+  color: #8a8a8a;
+  box-shadow: none;
+  cursor: default;
+}
+
+/* ---------- About ---------- */
+
+.about {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3) var(--space-2);
+  padding-inline: calc(var(--space-2) + env(safe-area-inset-right)) calc(var(--space-2) + env(safe-area-inset-left));
+  text-align: right;
+}
+
+.about__description {
+  font: var(--font-body);
+  font-size: 18px;
+}
+
+.about__subtitle {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-1);
+  font: var(--font-h2);
+}
+
+.instructions {
+  padding: 0;
+  list-style: none;
+  font: var(--font-body);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.score-card {
+  margin-top: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.score-card + .score-card {
+  margin-top: var(--space-2);
+}
+
+.score-card__title {
+  padding: var(--space-2);
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--color-border);
+  font: var(--font-label);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.score-card__value {
+  padding: var(--space-2);
+  font: var(--font-body);
+}

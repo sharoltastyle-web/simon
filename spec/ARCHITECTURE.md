@@ -244,3 +244,13 @@ Development רץ ב־Vite מקומי; בדיקת PWA נעשית ב־Production B
 27. [MDN — Service Worker Lifecycle and Cache](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers)
 28. [webpack — Concepts](https://webpack.js.org/concepts/)
 29. [esbuild — Official Documentation](https://esbuild.github.io/)
+
+## החלטות מרכזיות (ADRs)
+
+### ADR-1: מקור קובצי הגופן Heebo
+
+**הקשר:** הגופן Heebo צריך להיות מצורף לאתר כקובצי woff2 מקומיים (תת־קבוצת עברית ולטינית, משקלים 400, 500 ו־700), ללא טעינה משירות חיצוני. קובצי ה־CSS של תת־הקבוצות בחבילת `@fontsource/heebo` אינם כוללים `unicode-range`, ולכן ייבוא שתי תת־קבוצות באותו משקל היה גורם לאחת מהן לדרוס את השנייה.
+
+**החלטה:** ששת קובצי ה־woff2 הועתקו פעם אחת מחבילת `@fontsource/heebo` 5.3.0 אל `src/assets/fonts/`, יחד עם רישיון SIL OFL 1.1. הגדרות `@font-face` נכתבו ב־`src/fonts.css`, עם `font-display: swap` ו־`unicode-range` לכל תת־קבוצה. החבילה אינה תלות של הפרויקט.
+
+**השלכות:** Vite מוסיף את הקבצים ל־`dist` עם Hash בשם, ובהמשך הם ייכללו ב־Precache. אין תלות Runtime ב־npm או ב־CDN. עדכון הגופן ייעשה ידנית, אם בכלל יידרש.
