@@ -1,0 +1,86 @@
+# Checks every change; only a push to main (or a manual run) that passes every check is deployed to GitHub Pages.
+name: Test and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    # A newer push to the same pull request cancels the older check.
+    concurrency:
+      group: verify-${{ github.event_name == 'pull_request' && github.head_ref || github.run_id }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npx vite build
+        env:
+          # Invisible version marker, so the deployed version can be told apart from the one a device shows.
+          SIMON_BUILD_ID: ${{ github.sha }}
+
+      - name: Install browser for tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests against the build
+        run: npm run test:e2e
+
+      - name: Keep test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      - name: Prepare Pages
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v6.0.0
+
+      - name: Upload site
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: dist
+
+  deploy:
+    needs: verify
+    # Pull requests are only checked, never deployed.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    # One deployment at a time; a started deployment is never cut off.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5.0.1

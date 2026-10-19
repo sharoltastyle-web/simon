@@ -13,6 +13,7 @@
     "build": "tsc --noEmit && vitest run && vite build",
     "preview": "vite preview",
     "test:e2e": "playwright test",
+    "test:e2e:live": "node scripts/e2e-live.ts",
     "icons": "node scripts/generate-icons.ts"
   },
   "devDependencies": {

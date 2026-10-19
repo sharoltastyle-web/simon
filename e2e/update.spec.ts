@@ -1,8 +1,12 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { LIVE } from './baseUrl.ts';
 import { expectScores, fixRandomToBlue, message, pad, playGameWithScoreOne, waitForServiceWorkerControl } from './helpers.ts';
 import { startStaticServer, type SwappableServer } from './staticServer.ts';
+
+// This test builds and serves its own two versions; on the live site the update is checked by hand.
+test.skip(LIVE, 'not run against the live site');
 
 const PORT = 4174;
 const URL = `http://localhost:${PORT}/simon/`;

@@ -61,3 +61,4 @@
 - **הרצה (dev):** `npm run dev` (ואז לפתוח http://localhost:5173/simon/). בדיקת Build מקומי (כולל PWA ו-Offline): `npm run build` ואז `npm run preview` (http://localhost:4173/simon/)
 - **בדיקה בטלפון (אותה רשת Wi-Fi):** `npm run dev -- --host` ואז לפתוח בטלפון את כתובת ה-Network שמודפסת, עם `/simon/` בסוף (למשל http://192.168.x.x:5173/simon/). התקנה ו-Offline לא עובדים בכתובת כזו (נדרש HTTPS).
 - **בדיקות (test):** `npm test` (Unit Tests ב-Vitest). `npm run build` מריץ בדיקת טיפוסים + Unit Tests + Build. `npm run test:e2e` מריץ את בדיקות הדפדפן (Playwright) מול Build אמיתי, כולל Offline ועדכון גרסה.
+- **האתר החי:** https://sharoltastyle-web.github.io/simon/ — מתעדכן אוטומטית אחרי כל push ל־main שעבר את הבדיקות (GitHub Actions). בדיקות הדפדפן מול האתר החי: `npm run test:e2e:live`.

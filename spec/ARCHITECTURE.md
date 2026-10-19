@@ -295,3 +295,18 @@ Development רץ ב־Vite מקומי; בדיקת PWA נעשית ב־Production B
 - `@types/node` נוסף לטיפוסי קובצי התצורה והבדיקות.
 
 **השלכות:** WebKit לא נבדק ב־Milestone זה; יוחלט ב־Milestone 5 אם להוסיפו ל־CI. בדיקת התקנה בטלפון אמיתי דורשת HTTPS ונדחתה ל־Milestone 5. משתמש עם Worker פעיל יקבל גרסה חדשה רק לאחר סגירת כל חלונות המשחק ופתיחה מחדש.
+
+### ADR-6: פריסה אוטומטית ל־GitHub Pages
+
+**הקשר:** ב־Milestone 5 נדרשים בדיקות ופריסה אוטומטיות מ־main, בדיקת Pull Requests בלי פריסה, ואימות על האתר החי. ADR-5 השאיר פתוחה את השאלה אם להוסיף WebKit ל־CI.
+
+**החלטה:**
+- Workflow יחיד `.github/workflows/deploy.yml` עם שני Jobs: `verify` (בכל push ל־main, Pull Request ל־main והפעלה ידנית) ו־`deploy` (`needs: verify`, רק ל־main ולא ל־Pull Request). הרשאות `contents: read` כברירת מחדל; `pages: write` ו־`id-token: write` רק ב־`deploy`. Concurrency `pages` בלי ביטול פריסה שהתחילה; בדיקות של אותו Pull Request מבטלות ריצה קודמת.
+- Actions רשמיים בלבד, מקובעים לגרסה מדויקת: `actions/checkout@v7.0.1`, `actions/setup-node@v7.1.0` (Node מתוך `.nvmrc`), `actions/upload-artifact@v7.0.2` (דוח בדיקות בכשל בלבד, 7 ימים), `actions/configure-pages@v6.0.0`, `actions/upload-pages-artifact@v5.0.0`, `actions/deploy-pages@v5.0.1`.
+- ה־Build נבנה פעם אחת עם `SIMON_BUILD_ID` = ה־commit SHA (סימון `data-build` בלתי נראה). ב־CI ‏Playwright רק מגיש את ה־`dist` הזה (`vite preview`), כך שהבדיקות רצות על הקבצים שמפורסמים בדיוק. מקומית `npm run test:e2e` ממשיך לבנות בעצמו.
+- WebKit לא נוסף ל־CI (אושר על ידי המשתמש): הוא אינו מוכיח התנהגות של Safari מותקן ב־iOS; Safari נבדק בטלפון אמיתי.
+- `npm run test:e2e:live` מריץ את בדיקות הדפדפן מול האתר החי (`E2E_BASE_URL`); בדיקת שתי הגרסאות מדולגת שם.
+- כתובת האתר: https://sharoltastyle-web.github.io/simon/ (Source של Pages: GitHub Actions).
+- Rollback: `git revert` ל־commit הבעייתי ו־push ← בדיקות ופריסה אוטומטיות. אפשר גם להריץ מחדש (Re-run) ריצה ירוקה קודמת או להפעיל ידנית. דפדפן עם Worker פעיל ממשיך להציג את הגרסה השמורה עד שכל חלונות המשחק נסגרים והוא נפתח מחדש עם רשת; Local Storage אינו נמחק.
+
+**השלכות:** אין Secrets או Token. כשל בבדיקה כלשהי משאיר את האתר הקודם. תוצאות האימות על האתר החי ובטלפונים יתועדו בהשלמת Milestone 5.
