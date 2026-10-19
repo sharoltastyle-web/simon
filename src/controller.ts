@@ -1,6 +1,7 @@
 import type { AudioPort } from './audio.ts';
 import { advanceStage, checkInput, newSession, type Color, type RandomSource, type Session } from './engine.ts';
 import type { HomeView } from './homeView.ts';
+import type { Scores, ScoreStore } from './scoreStorage.ts';
 
 // Presentation timing (ARCHITECTURE §3); tunable constants, not a user setting.
 export const LIGHT_MS = 500;
@@ -16,9 +17,11 @@ export const MESSAGES = {
   timeout: (score: number) => `נגמר הזמן! התוצאה: ${score}`,
   win: 'ניצחתם! השלמתם את כל 10 השלבים',
   audioFailed: 'לא ניתן להשמיע צלילים. אפשר להמשיך לשחק לפי האורות.',
+  tapToContinue: 'להמשך המשחק, הקישו כאן',
+  saveFailed: 'לא ניתן לשמור ניקוד במכשיר זה.',
 } as const;
 
-export type Phase = 'idle' | 'presenting' | 'awaitingInput' | 'finished';
+export type Phase = 'idle' | 'presenting' | 'awaitingInput' | 'paused' | 'finished';
 export type Outcome = 'win' | 'wrongColor' | 'timeout';
 
 type TimerHandle = ReturnType<typeof setTimeout>;
@@ -30,6 +33,9 @@ export interface ControllerDeps {
   random?: RandomSource;
   setTimer?: (callback: () => void, ms: number) => TimerHandle;
   clearTimer?: (handle: TimerHandle) => void;
+  isVisible?: () => boolean;
+  scores?: ScoreStore;
+  onScoresChanged?: (scores: Scores) => void;
 }
 
 export interface GameState {
@@ -41,6 +47,12 @@ export interface GameState {
 export interface GameController {
   start(): void;
   press(color: Color): void;
+  // Stops all timing, light and sound; keeps the sequence and completed stages.
+  pause(): void;
+  // Called when the home screen is active and the page is visible.
+  resumeIfPossible(): void;
+  // Called when the player taps the message line after audio was blocked.
+  continueFromTap(): void;
   getState(): GameState;
 }
 
@@ -50,6 +62,7 @@ export function createController(deps: ControllerDeps): GameController {
   const random = deps.random ?? Math.random;
   const setTimer = deps.setTimer ?? ((callback, ms) => setTimeout(callback, ms));
   const clearTimer = deps.clearTimer ?? ((handle) => clearTimeout(handle));
+  const isVisible = deps.isVisible ?? (() => true);
 
   let phase: Phase = 'idle';
   let session: Session | null = null;
@@ -59,6 +72,7 @@ export function createController(deps: ControllerDeps): GameController {
   let runId = 0;
   let audioFailed = false;
   let firstPresentation = true;
+  let waitingForTap = false;
   const timers = new Set<TimerHandle>();
   const feedbackTimers = new Map<Color, TimerHandle>();
 
@@ -114,6 +128,7 @@ export function createController(deps: ControllerDeps): GameController {
     }
     phase = 'presenting';
     runId += 1;
+    view.setStage(session.sequence.length);
     view.setMessage(firstPresentation && audioFailed ? MESSAGES.audioFailed : MESSAGES.watch);
     firstPresentation = false;
     const sequence = session.sequence;
@@ -155,9 +170,16 @@ export function createController(deps: ControllerDeps): GameController {
       schedule(() => view.setLit(pressed, false), PRESS_FEEDBACK_MS);
     }
     view.setScore(score);
-    view.setMessage(
-      result === 'win' ? MESSAGES.win : result === 'wrongColor' ? MESSAGES.wrong(score) : MESSAGES.timeout(score),
-    );
+    let message: string =
+      result === 'win' ? MESSAGES.win : result === 'wrongColor' ? MESSAGES.wrong(score) : MESSAGES.timeout(score);
+    if (deps.scores) {
+      const recorded = deps.scores.record(score);
+      deps.onScoresChanged?.(recorded.scores);
+      if (!recorded.saved) {
+        message = `${message} ${MESSAGES.saveFailed}`;
+      }
+    }
+    view.setMessage(message);
     view.setStartEnabled(true);
   }
 
@@ -178,7 +200,7 @@ export function createController(deps: ControllerDeps): GameController {
 
   return {
     start(): void {
-      if (phase === 'presenting' || phase === 'awaitingInput') {
+      if (phase === 'presenting' || phase === 'awaitingInput' || phase === 'paused') {
         return;
       }
       runId += 1;
@@ -210,7 +232,7 @@ export function createController(deps: ControllerDeps): GameController {
     },
 
     press(color: Color): void {
-      if (phase !== 'awaitingInput' || !session) {
+      if (phase !== 'awaitingInput' || !session || !isVisible()) {
         return;
       }
       // A press at or after the deadline is not a valid answer.
@@ -230,14 +252,9 @@ export function createController(deps: ControllerDeps): GameController {
           showPressFeedback(color);
           phase = 'presenting';
           view.setScore(session.completedStages);
-          schedule(() => {
-            if (!session) {
-              return;
-            }
-            session = advanceStage(session, random);
-            view.setStage(session.sequence.length);
-            present();
-          }, STAGE_PAUSE_MS);
+          // Draw the next color now, so a pause during the gap resumes with a defined sequence.
+          session = advanceStage(session, random);
+          schedule(() => present(), STAGE_PAUSE_MS);
           break;
         case 'win':
           audio.playTone(color, PRESS_FEEDBACK_MS);
@@ -248,6 +265,81 @@ export function createController(deps: ControllerDeps): GameController {
           finish('wrongColor', color);
           break;
       }
+    },
+
+    pause(): void {
+      if (phase === 'paused') {
+        // Already paused: drop any pending resume or tap prompt; the next return retries.
+        runId += 1;
+        waitingForTap = false;
+        view.setMessageTappable(false);
+        view.setMessage('');
+        return;
+      }
+      if (phase !== 'presenting' && phase !== 'awaitingInput') {
+        return;
+      }
+      runId += 1;
+      cancelAll();
+      phase = 'paused';
+      waitingForTap = false;
+      if (session) {
+        // A partial answer is discarded; the whole sequence is replayed on return.
+        session = { ...session, inputIndex: 0 };
+      }
+      view.setMessage('');
+    },
+
+    resumeIfPossible(): void {
+      if (phase !== 'paused' || !session) {
+        return;
+      }
+      runId += 1;
+      const run = runId;
+      if (audioFailed) {
+        // Sound already failed at start: continue with lights only.
+        present();
+        return;
+      }
+      const resumeWith = (ok: boolean): void => {
+        if (run !== runId || phase !== 'paused') {
+          return;
+        }
+        if (ok) {
+          waitingForTap = false;
+          view.setMessageTappable(false);
+          present();
+        } else {
+          // The browser wants a user gesture before sound may play again.
+          waitingForTap = true;
+          view.setMessage(MESSAGES.tapToContinue);
+          view.setMessageTappable(true);
+        }
+      };
+      void audio.prepare().then(resumeWith, () => resumeWith(false));
+    },
+
+    continueFromTap(): void {
+      if (phase !== 'paused' || !waitingForTap || !isVisible()) {
+        return;
+      }
+      waitingForTap = false;
+      view.setMessageTappable(false);
+      view.setMessage('');
+      runId += 1;
+      const run = runId;
+      // prepare() runs inside the tap gesture, which lets the browser resume audio.
+      const continueWith = (ok: boolean): void => {
+        if (run !== runId || phase !== 'paused') {
+          return;
+        }
+        if (!ok) {
+          audioFailed = true;
+          firstPresentation = true;
+        }
+        present();
+      };
+      void audio.prepare().then(continueWith, () => continueWith(false));
     },
 
     getState(): GameState {

@@ -7,6 +7,8 @@ export interface HomeView {
   setLit(color: Color, lit: boolean): void;
   clearLights(): void;
   setStartEnabled(enabled: boolean): void;
+  // Makes the message line itself the "tap here" target while audio waits for a gesture.
+  setMessageTappable(tappable: boolean): void;
 }
 
 function requireElement<T extends HTMLElement>(id: string): T {
@@ -52,12 +54,35 @@ export function createHomeView(): HomeView {
     setStartEnabled: (enabled) => {
       start.disabled = !enabled;
     },
+    setMessageTappable: (tappable) => {
+      message.classList.toggle('is-tappable', tappable);
+      if (tappable) {
+        message.setAttribute('role', 'button');
+        message.tabIndex = 0;
+      } else {
+        message.removeAttribute('role');
+        message.removeAttribute('tabindex');
+      }
+    },
   };
 }
 
 // One click listener per control: covers touch, mouse and keyboard without duplicates.
-export function bindHomeInput(onStart: () => void, onPress: (color: Color) => void): void {
+export function bindHomeInput(
+  onStart: () => void,
+  onPress: (color: Color) => void,
+  onContinue: () => void,
+): void {
   requireElement<HTMLButtonElement>('start-button').addEventListener('click', onStart);
+  const message = requireElement('message');
+  // The controller ignores this unless it is waiting for a tap.
+  message.addEventListener('click', onContinue);
+  message.addEventListener('keydown', (event) => {
+    if (message.classList.contains('is-tappable') && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      onContinue();
+    }
+  });
   for (const color of COLORS) {
     document
       .querySelector<HTMLElement>(`.pad[data-color="${color}"]`)

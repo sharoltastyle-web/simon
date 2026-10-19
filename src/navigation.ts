@@ -27,8 +27,16 @@ export function showScreen(screen: Screen): void {
   window.scrollTo(0, 0);
 }
 
-export function initNavigation(): void {
-  const render = (): void => showScreen(parseRoute(window.location.hash));
+export function currentScreen(): Screen {
+  return parseRoute(window.location.hash);
+}
+
+export function initNavigation(onScreenChange?: (screen: Screen) => void): void {
+  const render = (): void => {
+    const screen = currentScreen();
+    showScreen(screen);
+    onScreenChange?.(screen);
+  };
   window.addEventListener('hashchange', render);
   render();
 }
