@@ -80,3 +80,6 @@ desktop.ini
 tmp/
 temp/
 *.tmp
+
+# --- PWA browser tests (two-version builds) ---
+dist-e2e/

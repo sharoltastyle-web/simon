@@ -6,6 +6,7 @@ import { createController } from './controller.ts';
 import { bindHomeInput, createHomeView } from './homeView.ts';
 import { initLifecycle, isPageVisible } from './lifecycle.ts';
 import { currentScreen, initNavigation } from './navigation.ts';
+import { initPwa } from './pwa.ts';
 import { createScoreStore } from './scoreStorage.ts';
 
 const aboutView = createAboutView();
@@ -27,3 +28,4 @@ bindHomeInput(
 
 const syncLifecycle = initLifecycle(controller, currentScreen);
 initNavigation(() => syncLifecycle());
+initPwa();

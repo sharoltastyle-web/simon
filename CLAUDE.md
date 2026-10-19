@@ -58,6 +58,6 @@
 
 ## פקודות הרצה
 > Claude ממלא זאת ברגע שהאפליקציה יכולה לרוץ (בדרך כלל בסיום Milestone 1), ומעדכן אם משהו משתנה.
-- **הרצה (dev):** `npm run dev` (ואז לפתוח http://localhost:5173). בדיקת Build מקומי: `npm run build` ואז `npm run preview` (http://localhost:4173)
-- **בדיקה בטלפון (אותה רשת Wi-Fi):** `npm run dev -- --host` ואז לפתוח בטלפון את כתובת ה-Network שמודפסת (למשל http://192.168.x.x:5173)
-- **בדיקות (test):** `npm test` (Unit Tests ב-Vitest). `npm run build` מריץ בדיקת טיפוסים + Unit Tests + Build.
+- **הרצה (dev):** `npm run dev` (ואז לפתוח http://localhost:5173/simon/). בדיקת Build מקומי (כולל PWA ו-Offline): `npm run build` ואז `npm run preview` (http://localhost:4173/simon/)
+- **בדיקה בטלפון (אותה רשת Wi-Fi):** `npm run dev -- --host` ואז לפתוח בטלפון את כתובת ה-Network שמודפסת, עם `/simon/` בסוף (למשל http://192.168.x.x:5173/simon/). התקנה ו-Offline לא עובדים בכתובת כזו (נדרש HTTPS).
+- **בדיקות (test):** `npm test` (Unit Tests ב-Vitest). `npm run build` מריץ בדיקת טיפוסים + Unit Tests + Build. `npm run test:e2e` מריץ את בדיקות הדפדפן (Playwright) מול Build אמיתי, כולל Offline ועדכון גרסה.

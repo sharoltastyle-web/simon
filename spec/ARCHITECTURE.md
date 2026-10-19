@@ -281,3 +281,17 @@ Development רץ ב־Vite מקומי; בדיקת PWA נעשית ב־Production B
 - Lifecycle Adapter (`src/lifecycle.ts`) משהה ב־`visibilitychange` ל־hidden, ב־`pagehide` ובמעבר לאודות, ומנסה לחדש רק כשמסך הבית פעיל והדף גלוי.
 
 **השלכות:** אין רכיב UI חדש. השהיה נוספת בזמן שממתינים לאודיו מבטלת את החידוש הממתין. Score Storage (`src/scoreStorage.ts`) הוא המודול היחיד שניגש ל־Local Storage.
+
+### ADR-5: PWA, Offline ובדיקות דפדפן
+
+**הקשר:** ב־Milestone 4 נדרשים Manifest, Precache, Worker מוגבל לנתיב הפרויקט, עדכון שאינו קוטע משחק ובדיקות Playwright מול Build אמיתי. עיצוב האייקון לא הוגדר במקור ואושר על ידי המשתמש (ראה DESIGN).
+
+**החלטה:**
+- base קבוע `/simon/` (Project Pages של ה־Repository `simon`); `id`, `start_url` ו־`scope` זהים לו.
+- vite-plugin-pwa 2.0.0 (Workbox 7.4.1) עם generateSW, `registerType: 'prompt'` ו־`injectRegister: false`. `cacheId: simon-memory`, `skipWaiting: false`, `clientsClaim: true` (משפיע רק על ה־Worker הראשון), `cleanupOutdatedCaches`, ו־Navigation Fallback ל־index.html רק תחת `/simon/`. ה־Precache כולל HTML, JS, CSS, ששת קובצי Heebo, האייקונים וה־Manifest (15 קבצים).
+- הרישום נעשה ב־`src/pwa.ts` באמצעות ייבוא סטטי של `workbox-window` ולא דרך `virtual:pwa-register`, משום שהאחרון יוצר Chunk נפרד שנטען בעיכוב — בניגוד לדרישה ל־Bundle אחד. אין `updateSW`/`skipWaiting` ואין רענון; כשל ברישום נבלע בשקט. בשרת הפיתוח אין רישום.
+- האייקונים נוצרים פעם אחת מקובצי SVG ב־`public/icons` באמצעות Playwright (`npm run icons`), ללא תלות נוספת. ה־apple-touch-icon הוא ריבוע מלא, וגרסת ה־maskable מותאמת לאזור הבטוח העגול (רדיוס 40%).
+- Playwright 1.64.1, Chromium בלבד בהדמיית Pixel 7, `npm run test:e2e`. בדיקת העדכון בונה שתי גרסאות (`SIMON_BUILD_ID`, מסומן ב־`data-build` בלתי נראה) ל־`dist-e2e/` ומגישה אותן בשרת סטטי קטן הניתן להחלפה.
+- `@types/node` נוסף לטיפוסי קובצי התצורה והבדיקות.
+
+**השלכות:** WebKit לא נבדק ב־Milestone זה; יוחלט ב־Milestone 5 אם להוסיפו ל־CI. בדיקת התקנה בטלפון אמיתי דורשת HTTPS ונדחתה ל־Milestone 5. משתמש עם Worker פעיל יקבל גרסה חדשה רק לאחר סגירת כל חלונות המשחק ופתיחה מחדש.
