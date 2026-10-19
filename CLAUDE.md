@@ -58,4 +58,5 @@
 ## פקודות הרצה
 > Claude ממלא זאת ברגע שהאפליקציה יכולה לרוץ (בדרך כלל בסיום Milestone 1), ומעדכן אם משהו משתנה.
 - **הרצה (dev):** `npm run dev` (ואז לפתוח http://localhost:5173). בדיקת Build מקומי: `npm run build` ואז `npm run preview` (http://localhost:4173)
-- **בדיקות (test):** `npm run build` (בדיקת טיפוסים + Build). Unit Tests יתווספו ב-Milestone 2.
+- **בדיקה בטלפון (אותה רשת Wi-Fi):** `npm run dev -- --host` ואז לפתוח בטלפון את כתובת ה-Network שמודפסת (למשל http://192.168.x.x:5173)
+- **בדיקות (test):** `npm test` (Unit Tests ב-Vitest). `npm run build` מריץ בדיקת טיפוסים + Unit Tests + Build.
